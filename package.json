@@ -1,0 +1,49 @@
+{
+	"name": "spine-exporter",
+	"version": "0.1.0",
+	"description": "A spine animation exporter that does not depend on spine editing software.",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"bin": {
+		"spine-exporter-cli": "dist/cli.js"
+	},
+	"files": [
+		"dist/**/*",
+		"src/**/*",
+		"README*.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"prepublish": "npm run clean && npm run build",
+		"clean": "npx rimraf ./dist",
+		"build": "npm run clean && npx tsc -b -clean && npx tsc -b"
+	},
+	"author": "Nattsu39",
+	"license": "MIT",
+	"keywords": [
+		"gamedev",
+		"game-dev",
+		"spine",
+		"cli"
+	],
+	"bugs": {
+		"url": "https://github.com/Nattsu39/spine-exporter/issues"
+	},
+	"homepage": "https://github.com/Nattsu39/spine-exporter#readme",
+	"dependencies": {
+		"@mojojs/path": "^1.6.0",
+		"@node-spine-runtimes/webgl-3.8.99": "^0.1.4",
+		"canvas": "2.11.2",
+		"fluent-ffmpeg": "^2.1.2",
+		"sharp": "^0.33.3",
+		"yargs": "^17.7.2"
+	},
+	"devDependencies": {
+		"@types/fluent-ffmpeg": "^2.1.24",
+		"@types/node": "^20.12.6",
+		"@types/yargs": "^17.0.32",
+		"prettier": "3.2.5",
+		"typescript": "^5.3.3"
+	}
+}

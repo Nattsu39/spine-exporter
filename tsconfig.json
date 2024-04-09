@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"typeRoots": ["./typings/"],
+		"target": "ESNext",
+		"module": "ESNext",
+		"noImplicitAny": true,
+		"preserveConstEnums": true,
+		"inlineSourceMap": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"lib": ["ESNEXT"],
+		"declaration": true,
+		"composite": true,
+		"moduleResolution": "node",
+		"skipLibCheck": true,
+		"strict": true
+	},
+	"include": ["src/*.ts"],
+	"exclude": ["dist/**/*.d.ts"]
+}
