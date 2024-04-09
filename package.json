@@ -22,9 +22,9 @@
 	"author": "Nattsu39",
 	"license": "MIT",
 	"keywords": [
-		"gamedev",
-		"game-dev",
 		"spine",
+		"export",
+		"exporter",
 		"cli"
 	],
 	"bugs": {
