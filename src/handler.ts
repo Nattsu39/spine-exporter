@@ -50,7 +50,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 			const { skeleton, state } = await renderer.load(assetPath, 1);
 			for (let animation of skeleton.data.animations) {
 				const aName = animation.name;
-				if (!selectedAnimation.includes(aName)) continue;
+				if (selectedAnimation.length && !selectedAnimation.includes(aName)) continue;
 
 				const formatObject = {
 					assetName: assetPath.assetName,
