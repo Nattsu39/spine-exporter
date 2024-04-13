@@ -51,16 +51,21 @@ class CropSize {
 
 async function calculateCropSize(images: Buffer[]): Promise<CropSize> {
 	const options: any[] = [];
-	for (let image of images) {
+	for (let image of images.slice(1)) {
 		options.push({
 			input: image,
 			blend: "over",
 			gravity: "center",
 		});
 	}
-	let temp = await sharp(images[0]).composite(options).png({ compressionLevel: 0 }).toBuffer();
+	let temp = await sharp(images[0])
+		.composite(options)
+		.png({ compressionLevel: 0 })
+		.toBuffer();
 
-	const { info } = await sharp(temp).trim({ background: "#00000000" }).toBuffer({ resolveWithObject: true });
+	const { info } = await sharp(temp)
+		.trim({ background: "#00000000" })
+		.toBuffer({ resolveWithObject: true });
 
 	const size = new CropSize(info.width, info.height, Math.abs(info.trimOffsetLeft!), Math.abs(info.trimOffsetTop!));
 	if (size.width % 2 !== 0) size.addWidth(1);
