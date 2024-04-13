@@ -19,6 +19,7 @@ export interface ExportSpineAssetsOptions {
 	canvasSize?: string;
 	selectedAnimation?: string[];
 	fps?: number;
+	scale?: number;
 	endPosition?: number;
 }
 
@@ -29,6 +30,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 		canvasSize = "1000x1000",
 		selectedAnimation = [],
 		fps = 30,
+		scale = 1,
 		endPosition = Infinity,
 	} = options;
 	if (exportType === "png") endPosition = 1;
@@ -45,37 +47,37 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 
 	for (let assetIndex = 0; assetIndex < pathArray.length; assetIndex++) {
 		const assetPath = pathArray[assetIndex];
+		const assetName = assetPath.assetName;
 		const assetProcess = `[${assetIndex + 1}/${pathArray.length}]`;
 		try {
-			const { skeleton, state } = await renderer.load(assetPath, 1);
+			const { skeleton, state } = await renderer.load(assetPath, scale);
 			for (let animation of skeleton.data.animations) {
-				const aName = animation.name;
-				if (selectedAnimation.length && !selectedAnimation.includes(aName)) continue;
+				const animationName = animation.name;
+				if (selectedAnimation.length && !selectedAnimation.includes(animationName)) {
+					continue
+				};
 
 				const formatObject = {
-					assetName: assetPath.assetName,
-					animationName: aName,
-					fps: fps,
+					assetName,
+					animationName,
+					fps,
+					scale,
 				};
 				const exportFunc = exportFuncFactory(exportType, {
 					outputPath: formatOutputPath(outputPath, formatObject),
-					fps: fps,
+					fps,
 				});
 
-				console.log(`${assetProcess}Start rendering the animation '${aName}' of asset '${assetPath.assetName}'...`);
+				console.log(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
 				const animationFrames = await renderer.render({
-					skeleton,
-					state,
-					animationName: aName,
-					fps: fps,
-					endPosition: endPosition,
+					skeleton, state, animationName, fps, endPosition,
 				});
 
-				console.log(`${assetProcess}Start exporting the animation '${aName}' of asset '${assetPath.assetName}'...`);
+				console.log(`${assetProcess}Start exporting the animation '${animationName}' of asset '${assetName}'...`);
 				await exportFunc(animationFrames);
 			}
 		} catch (error) {
-			console.info(`Asset export error！\nasset: ${assetPath.assetName}\nerror: ${error}`);
+			console.info(`Asset export error！\nasset: ${assetName}\nerror: ${error}`);
 		}
 	}
 }

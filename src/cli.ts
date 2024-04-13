@@ -61,8 +61,22 @@ const parser = yargs(hideBin(process.argv))
 			default: [],
 			desc: "If set, only the animations in the parameters will be rendered, by default all will be rendered.",
 		},
-		fps: { alias: "f", type: "number", default: 30, desc: `Rendering frame rate, invalid when --exportType is 'png'.` },
-		"end-position": { type: "number", default: Infinity, desc: "If set, rendering will end at the specified frame." },
+		fps: {
+			alias: "f", 
+			type: "number", 
+			default: 30, 
+			desc: `Rendering frame rate, invalid when --exportType is 'png'.`
+		},
+		"scale": {
+			type: "number",
+			default: 1,
+			desc: "Scale the skeleton size, default is 1x."
+		},
+		"end-position": {
+			type: "number", 
+			default: Infinity, 
+			desc: "If set, rendering will end at the specified frame."
+		},
 	})
 	.example([
 		["$0 --export-type gif assets/", "Render assets in ./assets/ and export to GIF."],
