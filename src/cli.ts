@@ -87,7 +87,7 @@ const parser = yargs(hideBin(process.argv))
 	.example([
 		["$0 --export-type gif assets/", "Render assets in ./assets/ and export to GIF."],
 		[
-			"$0 -e png -o output/{assetName}/{animationName} assets/ ",
+			"$0 -e png -o output/{assetName}_{animationName} assets/ ",
 			`Render the assets in ./assets/ and export the first frame. Assume the asset name is 'foo', the animation name is 'bar', and the exported file is 'foo_bar.png'`,
 		],
 		[
