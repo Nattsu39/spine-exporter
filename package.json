@@ -1,6 +1,6 @@
 {
 	"name": "spine-exporter",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "A spine animation exporter that does not depend on spine editing software.",
 	"type": "module",
 	"main": "dist/index.js",
@@ -33,7 +33,7 @@
 	"homepage": "https://github.com/Nattsu39/spine-exporter#readme",
 	"dependencies": {
 		"@mojojs/path": "^1.6.0",
-		"@node-spine-runtimes/webgl-3.8.99": "^0.1.4",
+		"@node-spine-runtimes/webgl-3.8.99": "^0.1.6",
 		"canvas": "2.11.2",
 		"fluent-ffmpeg": "^2.1.2",
 		"sharp": "^0.33.3",
