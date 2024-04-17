@@ -18,8 +18,9 @@ export interface ExportSpineAssetsOptions {
 	exportType: TExporterType;
 	canvasSize?: string;
 	selectedAnimation?: string[];
-	fps?: number;
+	preMultipliedAlpha: boolean;
 	scale?: number;
+	fps?: number;
 	endPosition?: number;
 }
 
@@ -29,6 +30,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 		exportType,
 		canvasSize = "1000x1000",
 		selectedAnimation = [],
+		preMultipliedAlpha = false,
 		fps = 30,
 		scale = 1,
 		endPosition = Infinity,
@@ -50,7 +52,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 		const assetName = assetPath.assetName;
 		const assetProcess = `[${assetIndex + 1}/${pathArray.length}]`;
 		try {
-			const { skeleton, state } = await renderer.load(assetPath, scale);
+			const { skeleton, state } = await renderer.load(assetPath, scale, preMultipliedAlpha);
 			for (let animation of skeleton.data.animations) {
 				const animationName = animation.name;
 				if (selectedAnimation.length && !selectedAnimation.includes(animationName)) {

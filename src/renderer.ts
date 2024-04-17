@@ -14,6 +14,7 @@ import {
 	SceneRenderer,
 	AssetManager,
 	ResizeMode,
+	GLTexture,
 } from "@node-spine-runtimes/webgl-3.8.99";
 import fs from "fs";
 import path from "path";
@@ -81,7 +82,13 @@ export class SpineRenderer {
 		this.assetManager = new AssetManager(this.context);
 	}
 
-	async load(assetPath: AssetPath, scale: number = 1): Promise<LoadedResult> {
+	async load(
+		assetPath: AssetPath, 
+		scale: number = 1, 
+		preMultipliedAlpha: boolean = false
+	): Promise<LoadedResult> {
+		GLTexture.DISABLE_UNPACK_PREMULTIPLIED_ALPHA_WEBGL = preMultipliedAlpha
+
 		const loadAsset = async () => {
 			if (assetPath.loadMode === "skel") {
 				this.assetManager.loadBinary(assetPath.skeleton);

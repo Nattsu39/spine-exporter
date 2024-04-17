@@ -61,16 +61,22 @@ const parser = yargs(hideBin(process.argv))
 			default: [],
 			desc: "If set, only the animations in the parameters will be rendered, by default all will be rendered.",
 		},
-		fps: {
-			alias: "f", 
-			type: "number", 
-			default: 30, 
-			desc: `Rendering frame rate, invalid when --exportType is 'png'.`
+		"pre-multiplied-alpha": {
+			alias: "pma",
+			type: "boolean",
+			default: false,
+			desc: "Whether to premultiply alpha when loading texture, try changing this option if the rendering result is incorrect."
 		},
 		"scale": {
 			type: "number",
 			default: 1,
 			desc: "Scale the skeleton size, default is 1x."
+		},
+		fps: {
+			alias: "f", 
+			type: "number", 
+			default: 30, 
+			desc: `Rendering frame rate, invalid when --exportType is 'png'.`
 		},
 		"end-position": {
 			type: "number", 
