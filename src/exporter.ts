@@ -78,10 +78,11 @@ async function toGIF(animationFrames: Buffer[], fps: number, outputPath: string)
 	const size = await calculateCropSize(animationFrames);
 	const dataStream = stream.Readable.from(animationFrames);
 	createFfmpeg(dataStream)
-		.FPS(fps)
+		.inputFPS(fps)
 		.complexFilter([
 			`[0:v]crop=${size.toString()}[middle]; [middle]split[a][b]; [a]palettegen=transparency_color=ffffff[p]; [b][p]paletteuse[out]`,
 		])
+		.outputFPS(fps)
 		.map("[out]")
 		.save(outputPath);
 }
@@ -90,8 +91,9 @@ async function toMOV(animationFrames: Buffer[], fps: number, outputPath: string)
 	const size = await calculateCropSize(animationFrames);
 	const dataStream = stream.Readable.from(animationFrames);
 	createFfmpeg(dataStream)
-		.FPS(fps)
+		.inputFPS(fps)
 		.complexFilter("crop=" + size.toString())
+		.outputFPS(fps)
 		.outputOptions("-pix_fmt yuv420p")
 		.save(outputPath);
 }
@@ -101,7 +103,6 @@ async function toPNGSequence(animationFrames: Buffer[], outputPath: string) {
 	const size = await calculateCropSize(animationFrames);
 	const dataStream = stream.Readable.from(animationFrames);
 	createFfmpeg(dataStream)
-		.FPS(25)
 		.complexFilter("crop=" + size.toString())
 		.outputFormat("image2")
 		.save(`${outputPath}_%0${indexLength}d.png`);
