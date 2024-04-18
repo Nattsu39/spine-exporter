@@ -15,7 +15,7 @@
 		"LICENSE"
 	],
 	"scripts": {
-		"prepublish": "npm run clean && npm run build",
+		"prepublishOnly": "npm run clean && npm run build",
 		"clean": "npx rimraf ./dist",
 		"build": "npm run clean && npx tsc -b -clean && npx tsc -b"
 	},
