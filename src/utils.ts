@@ -63,6 +63,6 @@ export function extractKeysToArray<T extends object>(obj: T): StringKeyOf<T>[] {
 	return Object.keys(obj) as StringKeyOf<T>[];
 }
 
-export const replacePathSpecific = (pathString: string) => {
-	return pathString.replace(path.sep, "/");
+export function replacePathSpecific(pathString: string) {
+	return pathString.replaceAll(path.sep, "/");
 };
