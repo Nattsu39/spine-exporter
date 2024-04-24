@@ -16,7 +16,7 @@ export function parseCanvasSize(size: string) {
 export interface ExportSpineAssetsOptions {
 	outputPath?: string;
 	exportType: TExporterType;
-	canvasSize?: string;
+	canvasSize?: string | null;
 	selectedAnimation?: string[];
 	preMultipliedAlpha: boolean;
 	scale?: number;
@@ -28,7 +28,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 	let {
 		outputPath = "output/{assetName}/{animationName}",
 		exportType,
-		canvasSize = "1000x1000",
+		canvasSize,
 		selectedAnimation = [],
 		preMultipliedAlpha = false,
 		fps = 30,
@@ -42,7 +42,8 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 	};
 	await checkParams();
 
-	const size = parseCanvasSize(canvasSize);
+	const isOldCanvasMode = typeof canvasSize === "string";
+	const size = isOldCanvasMode ? parseCanvasSize(canvasSize) : { width: 1000, height: 1000 };
 	const renderer = new SpineRenderer(createCanvas(size.width, size.height));
 	const paths = await traverseDir(inputDir);
 	const pathArray = Array(...paths.values());
@@ -56,23 +57,23 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 			for (let animation of skeleton.data.animations) {
 				const animationName = animation.name;
 				if (selectedAnimation.length && !selectedAnimation.includes(animationName)) {
-					continue
-				};
-
-				const formatObject = {
-					assetName,
-					animationName,
-					fps,
-					scale,
-				};
-				const exportFunc = exportFuncFactory(exportType, {
-					outputPath: formatOutputPath(outputPath, formatObject),
-					fps,
-				});
+					continue;
+				}
 
 				console.log(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
 				const animationFrames = await renderer.render({
-					skeleton, state, animationName, fps, endPosition,
+					skeleton,
+					state,
+					animationName,
+					fps,
+					endPosition,
+				});
+
+				const formatObject = { assetName, animationName, fps, scale };
+				const exportFunc = exportFuncFactory(exportType, {
+					outputPath: formatOutputPath(outputPath, formatObject),
+					fps,
+					autoCrop: isOldCanvasMode,
 				});
 
 				console.log(`${assetProcess}Start exporting the animation '${animationName}' of asset '${assetName}'...`);

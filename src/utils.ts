@@ -50,7 +50,7 @@ export interface OutputPathFormatObject extends FormatObject {
 	assetName: string;
 	animationName: string;
 	fps: number;
-	scale: number
+	scale: number;
 }
 
 export function formatOutputPath(str: string, obj: OutputPathFormatObject) {
@@ -65,4 +65,4 @@ export function extractKeysToArray<T extends object>(obj: T): StringKeyOf<T>[] {
 
 export function replacePathSpecific(pathString: string) {
 	return pathString.replaceAll(path.sep, "/");
-};
+}

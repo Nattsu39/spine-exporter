@@ -1,10 +1,14 @@
 import {
 	Skeleton,
+	Animation,
 	AnimationState,
 	AnimationStateData,
 	AtlasAttachmentLoader,
 	SkeletonBinary,
 	SkeletonJson,
+	Vector2,
+	MixBlend,
+	MixDirection,
 } from "@node-spine-runtimes/core-3.8.99";
 import { NodeCanvasRenderingContext2DSettings } from "canvas";
 import { WebGLRenderingContext } from "gl";
@@ -59,6 +63,42 @@ export class TimeKeeper {
 	}
 }
 
+export interface Viewport {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+function calculateAnimationViewport(animation: Animation, skeleton: Skeleton, fps: number): Viewport {
+	skeleton.setToSetupPose();
+
+	let steps = animation.duration ? fps * animation.duration : 1;
+	let stepTime = animation.duration ? animation.duration / steps : 0,
+		time = 0;
+	let minX = 100000000,
+		maxX = -100000000,
+		minY = 100000000,
+		maxY = -100000000;
+	let offset = new Vector2(),
+		size = new Vector2();
+
+	for (let i = 0; i < steps; i++, time += stepTime) {
+		animation.apply(skeleton, time, time, false, [], 1, MixBlend.setup, MixDirection.mixIn);
+		skeleton.updateWorldTransform();
+		skeleton.getBounds(offset, size);
+
+		if (!isNaN(offset.x) && !isNaN(offset.y) && !isNaN(size.x) && !isNaN(size.y)) {
+			minX = Math.min(offset.x, minX);
+			maxX = Math.max(offset.x + size.x, maxX);
+			minY = Math.min(offset.y, minY);
+			maxY = Math.max(offset.y + size.y, maxY);
+		} else throw new Error("Animation bounds are invalid: " + animation.name);
+	}
+
+	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
 export class SpineRenderer {
 	//readonly time = new TimeKeeper();
 	readonly context: ManagedWebGLRenderingContext;
@@ -82,12 +122,8 @@ export class SpineRenderer {
 		this.assetManager = new AssetManager(this.context);
 	}
 
-	async load(
-		assetPath: AssetPath, 
-		scale: number = 1, 
-		preMultipliedAlpha: boolean = false
-	): Promise<LoadedResult> {
-		GLTexture.DISABLE_UNPACK_PREMULTIPLIED_ALPHA_WEBGL = preMultipliedAlpha
+	async load(assetPath: AssetPath, scale: number = 1, preMultipliedAlpha: boolean = false): Promise<LoadedResult> {
+		GLTexture.DISABLE_UNPACK_PREMULTIPLIED_ALPHA_WEBGL = preMultipliedAlpha;
 
 		const loadAsset = async () => {
 			if (assetPath.loadMode === "skel") {
@@ -124,15 +160,17 @@ export class SpineRenderer {
 
 		const update = (delta: number) => {
 			time.update(delta);
+			this.renderer.resize(ResizeMode.Expand);
 			state.update(time.delta);
 			state.apply(skeleton);
 			skeleton.updateWorldTransform();
 		};
 
 		const render = () => {
+			this.renderer.camera.position.x = viewport.x + viewport.width / 2;
+			this.renderer.camera.position.y = viewport.y + viewport.height / 2;
 			this.gl.clearColor(0, 0, 0, 0);
 			this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-			this.renderer.resize(ResizeMode.Expand);
 			this.renderer.begin();
 			this.renderer.drawSkeleton(skeleton, true);
 			this.renderer.end();
@@ -148,6 +186,12 @@ export class SpineRenderer {
 		state.addListener({
 			complete: renderingEnd,
 		});
+
+		const viewport = calculateAnimationViewport(skeleton.data.findAnimation(animationName)!, skeleton, fps);
+		this.canvas.width = Math.round(viewport.width);
+		this.canvas.height = Math.round(viewport.height);
+		if (this.canvas.width % 2 !== 0) this.canvas.width += 1;
+		if (this.canvas.height % 2 !== 0) this.canvas.height += 1;
 
 		const promise = async () => {
 			this.isRendering = true;

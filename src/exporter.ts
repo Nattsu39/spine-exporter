@@ -74,45 +74,50 @@ async function calculateCropSize(images: Buffer[]): Promise<CropSize> {
 	return size;
 }
 
-async function toGIF(animationFrames: Buffer[], fps: number, outputPath: string) {
-	const size = await calculateCropSize(animationFrames);
+const cropSize = async (animationFrames: Buffer[]) => (await calculateCropSize(animationFrames)).toString()
+
+async function toGIF(animationFrames: Buffer[], fps: number, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from(animationFrames);
 	createFfmpeg(dataStream)
 		.inputFPS(fps)
 		.complexFilter([
-			`[0:v]crop=${size.toString()}[middle]; [middle]split[a][b]; [a]palettegen=transparency_color=ffffff[p]; [b][p]paletteuse[out]`,
+			`${autoCrop 
+			? `[0:v]crop=${await cropSize(animationFrames)}[middle]; [middle]` 
+			: '[0:v]'}split[a][b]; 
+			[a]palettegen=transparency_color=ffffff[p]; 
+			[b][p]paletteuse[out]`,
 		])
 		.outputFPS(fps)
 		.map("[out]")
 		.save(outputPath);
 }
 
-async function toMOV(animationFrames: Buffer[], fps: number, outputPath: string) {
-	const size = await calculateCropSize(animationFrames);
+async function toMOV(animationFrames: Buffer[], fps: number, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from(animationFrames);
-	createFfmpeg(dataStream)
+	const ffmpeg = createFfmpeg(dataStream)
 		.inputFPS(fps)
-		.complexFilter("crop=" + size.toString())
+		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize(animationFrames))}
+	ffmpeg
 		.outputFPS(fps)
 		.outputOptions("-pix_fmt yuv420p")
 		.save(outputPath);
 }
 
-async function toPNGSequence(animationFrames: Buffer[], outputPath: string) {
+async function toPNGSequence(animationFrames: Buffer[], autoCrop: boolean, outputPath: string) {
 	const indexLength = animationFrames.length.toString().length;
-	const size = await calculateCropSize(animationFrames);
 	const dataStream = stream.Readable.from(animationFrames);
-	createFfmpeg(dataStream)
-		.complexFilter("crop=" + size.toString())
+	const ffmpeg = createFfmpeg(dataStream)
+		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize(animationFrames))}
+	ffmpeg
 		.outputFormat("image2")
 		.save(`${outputPath}_%0${indexLength}d.png`);
 }
 
-async function toSingleFramePNG(frame: Buffer, outputPath: string) {
-	const size = await calculateCropSize([frame]);
+async function toSingleFramePNG(frame: Buffer, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from([frame]);
-	createFfmpeg(dataStream)
-		.complexFilter("crop=" + size.toString())
+	const ffmpeg = createFfmpeg(dataStream)
+		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize([frame]))}
+	ffmpeg
 		.frames(1)
 		.save(outputPath);
 }
@@ -130,24 +135,25 @@ export type TExportFunc = (buffer: Buffer[]) => Promise<void>;
 export interface ExportOptions {
 	outputPath: string;
 	fps?: number;
+	autoCrop?: boolean
 }
 
 export function exportFuncFactory(exportType: TExporterType, options: ExportOptions) {
-	let { outputPath, fps = 30 } = options;
+	let { fps = 30, autoCrop = false, outputPath } = options;
 
 	type ExporterWrapObject = { [key in TExporterType]: TExportFunc };
 	const obj: ExporterWrapObject = {
 		gif: async (buffers: Buffer[]) => {
-			await Exporters.gif(buffers, fps, outputPath + ".gif");
+			await Exporters.gif(buffers, fps, autoCrop, outputPath + ".gif");
 		},
 		png: async (buffers: Buffer[]) => {
-			await Exporters.png(buffers[0], outputPath + ".png");
+			await Exporters.png(buffers[0], autoCrop, outputPath + ".png");
 		},
 		sequence: async (buffers: Buffer[]) => {
-			await Exporters.sequence(buffers, outputPath);
+			await Exporters.sequence(buffers, autoCrop, outputPath);
 		},
 		mov: async (buffers: Buffer[]) => {
-			await Exporters.mov(buffers, fps, outputPath + ".mov");
+			await Exporters.mov(buffers, fps, autoCrop, outputPath + ".mov");
 		},
 	};
 

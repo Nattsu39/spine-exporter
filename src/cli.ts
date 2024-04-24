@@ -51,8 +51,8 @@ const parser = yargs(hideBin(process.argv))
 		"canvas-size": {
 			alias: "c",
 			type: "string",
-			default: "1000x1000",
-			desc: "Canvas size. Content that exceeds the canvas size will not be rendered. Large sizes will significantly reduce rendering speed.",
+			default: null,
+			desc: "If set, old-style cropping is used, i.e. content that exceeds the canvas size will not be rendered. By default, AABB's min-max vertex positioning rendering range is used.",
 		},
 		"selected-animation": {
 			alias: "s",
@@ -65,23 +65,23 @@ const parser = yargs(hideBin(process.argv))
 			alias: "pma",
 			type: "boolean",
 			default: false,
-			desc: "Whether to premultiply alpha when loading texture, try changing this option if the rendering result is incorrect."
+			desc: "Whether to premultiply alpha when loading texture, try changing this option if the rendering result is incorrect.",
 		},
-		"scale": {
+		scale: {
 			type: "number",
 			default: 1,
-			desc: "Scale the skeleton size, default is 1x."
+			desc: "Scale the skeleton size, default is 1x.",
 		},
 		fps: {
-			alias: "f", 
-			type: "number", 
-			default: 30, 
-			desc: `Rendering frame rate, invalid when --exportType is 'png'.`
+			alias: "f",
+			type: "number",
+			default: 30,
+			desc: `Rendering frame rate, invalid when --exportType is 'png'.`,
 		},
 		"end-position": {
-			type: "number", 
-			default: Infinity, 
-			desc: "If set, rendering will end at the specified frame."
+			type: "number",
+			default: Infinity,
+			desc: "If set, rendering will end at the specified frame.",
 		},
 	})
 	.example([
