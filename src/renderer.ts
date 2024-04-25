@@ -9,6 +9,7 @@ import {
 	Vector2,
 	MixBlend,
 	MixDirection,
+	TextureAtlas,
 } from "@node-spine-runtimes/core-3.8.99";
 import { NodeCanvasRenderingContext2DSettings } from "canvas";
 import { WebGLRenderingContext } from "gl";
@@ -99,8 +100,17 @@ function calculateAnimationViewport(animation: Animation, skeleton: Skeleton, fp
 	return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
+export async function loadTexture (assetManager: AssetManager, atlasFilePath: string, preMultipliedAlpha: boolean = false) {
+	GLTexture.DISABLE_UNPACK_PREMULTIPLIED_ALPHA_WEBGL = preMultipliedAlpha;
+
+	assetManager.loadTextureAtlas(atlasFilePath);
+	while (!assetManager.isLoadingComplete()) {
+		await sleep(100);
+	}
+	return assetManager.get(atlasFilePath) as TextureAtlas
+};
+
 export class SpineRenderer {
-	//readonly time = new TimeKeeper();
 	readonly context: ManagedWebGLRenderingContext;
 	/** Tracks the current time, delta, and other time related statistics. */
 	/** The HTML canvas to render to. */
@@ -123,36 +133,25 @@ export class SpineRenderer {
 	}
 
 	async load(assetPath: AssetPath, scale: number = 1, preMultipliedAlpha: boolean = false): Promise<LoadedResult> {
-		GLTexture.DISABLE_UNPACK_PREMULTIPLIED_ALPHA_WEBGL = preMultipliedAlpha;
-
-		const loadAsset = async () => {
-			if (assetPath.loadMode === "skel") {
-				this.assetManager.loadBinary(assetPath.skeleton);
-			} else {
-				this.assetManager.loadText(assetPath.skeleton);
-			}
-			this.assetManager.loadTextureAtlas(assetPath.atlas);
-
-			while (!this.assetManager.isLoadingComplete()) {
-				await sleep(500);
-			}
+		const atlas = await loadTexture(this.assetManager, assetPath.atlas, preMultipliedAlpha);
+		if (assetPath.loadMode === "skel") {
+			this.assetManager.loadBinary(assetPath.skeleton);
+		} else {
+			this.assetManager.loadText(assetPath.skeleton);
 		};
+		while (!this.assetManager.isLoadingComplete()) {
+			await sleep(100);
+		}
 
-		const loadSkeleton = () => {
-			let atlasLoader = new AtlasAttachmentLoader(this.assetManager.get(assetPath.atlas));
+		let atlasLoader = new AtlasAttachmentLoader(atlas);
+		const skeletonBinaryOrJson: SkeletonBinary | SkeletonJson =
+			assetPath.loadMode === "skel" ? new SkeletonBinary(atlasLoader) : new SkeletonJson(atlasLoader);
 
-			const skeletonBinaryOrJson: SkeletonBinary | SkeletonJson =
-				assetPath.loadMode === "skel" ? new SkeletonBinary(atlasLoader) : new SkeletonJson(atlasLoader);
-
-			skeletonBinaryOrJson.scale = scale;
-			const skeletonData = skeletonBinaryOrJson.readSkeletonData(this.assetManager.get(assetPath.skeleton));
-			const skeleton = new Skeleton(skeletonData);
-			const animationState = new AnimationState(new AnimationStateData(skeleton.data));
-			return { skeleton: skeleton, state: animationState };
-		};
-
-		await loadAsset();
-		return loadSkeleton();
+		skeletonBinaryOrJson.scale = scale;
+		const skeletonData = skeletonBinaryOrJson.readSkeletonData(this.assetManager.get(assetPath.skeleton));
+		const skeleton = new Skeleton(skeletonData);
+		const animationState = new AnimationState(new AnimationStateData(skeleton.data));
+		return { skeleton: skeleton, state: animationState };
 	}
 
 	async render(options: RenderOptions) {
