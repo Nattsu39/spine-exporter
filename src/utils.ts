@@ -66,3 +66,8 @@ export function extractKeysToArray<T extends object>(obj: T): StringKeyOf<T>[] {
 export function replacePathSpecific(pathString: string) {
 	return pathString.replaceAll(path.sep, "/");
 }
+
+export function removePathExtension(filePath: string): string {
+	let {dir, name} = path.parse(filePath);
+	return path.join(dir, name);
+}

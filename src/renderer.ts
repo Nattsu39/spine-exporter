@@ -24,7 +24,7 @@ import {
 import fs from "fs";
 import path from "path";
 import { Queue } from "./queue.js";
-import { sleep, replacePathSpecific } from "./utils.js";
+import { sleep, replacePathSpecific, removePathExtension } from "./utils.js";
 
 export interface LoadedResult {
 	skeleton: Skeleton;
@@ -222,10 +222,10 @@ export class AssetPath {
 		this.skeleton = replacePathSpecific(skeleton);
 		this.atlas = replacePathSpecific(atlas);
 		this.texture = replacePathSpecific(texture);
-		this.noExtFilePath = this.skeleton.slice(0, -5);
+		this.noExtFilePath = removePathExtension(this.skeleton);
 		this.loadMode = this.skeleton.slice(-4) as "skel" | "json";
+		
 		if (this.loadMode !== "json" && this.loadMode !== "skel") throw new TypeError("骨骼数据后缀不正确");
-
 		if (!fs.existsSync(this.skeleton)) throw new Error(`找不到骨骼数据文件${this.skeleton}！`);
 		if (!fs.existsSync(this.atlas)) throw new Error(`找不到纹理图集${this.atlas}！`);
 		if (!fs.existsSync(this.texture)) throw new Error(`找不到纹理${this.texture}！`);
@@ -234,15 +234,7 @@ export class AssetPath {
 	}
 
 	static fromFilepath(filePath: string): AssetPath {
-		let noExtFilePath: string;
-		if (path.extname(filePath)) {
-			let parsedPath = path.parse(filePath);
-			noExtFilePath = path.join(parsedPath.dir, parsedPath.name);
-		} else {
-			noExtFilePath = filePath;
-		}
-
-		noExtFilePath = replacePathSpecific(noExtFilePath);
+		let noExtFilePath: string = removePathExtension(filePath);
 
 		let skeleton: string;
 		if (fs.existsSync(noExtFilePath + ".skel")) {
