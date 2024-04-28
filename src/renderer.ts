@@ -210,6 +210,26 @@ export class SpineRenderer {
 	}
 }
 
+interface AssetPathGroupStatic {
+	fromFilepath: (filePath: string) => InstanceType<this>;
+	new (...args: string[]): any
+}
+
+interface AssetPathGroupInstance {
+	noExtFilePath: string;
+	assetName: string;
+}
+
+// 一个用于类型提示的假的抽象类
+export const AssetPathGroup: AssetPathGroupStatic = class implements AssetPathGroupInstance {
+	noExtFilePath: string = '';
+	assetName: string = '';
+	constructor() {
+		throw new Error("该类不能被实例化！");
+	}
+	static fromFilepath() { return new this() };
+}
+
 export class AssetPath {
 	noExtFilePath: string;
 	loadMode: "skel" | "json";
@@ -224,7 +244,7 @@ export class AssetPath {
 		this.texture = replacePathSpecific(texture);
 		this.noExtFilePath = removePathExtension(this.skeleton);
 		this.loadMode = this.skeleton.slice(-4) as "skel" | "json";
-		
+
 		if (this.loadMode !== "json" && this.loadMode !== "skel") throw new TypeError("骨骼数据后缀不正确");
 		if (!fs.existsSync(this.skeleton)) throw new Error(`找不到骨骼数据文件${this.skeleton}！`);
 		if (!fs.existsSync(this.atlas)) throw new Error(`找不到纹理图集${this.atlas}！`);

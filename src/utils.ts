@@ -1,23 +1,23 @@
 import fs from "fs/promises";
-import { AssetPath } from "./renderer.js";
+import { AssetPathGroup } from "./renderer.js";
 import path from "path";
 
 export const sleep = (waitTimeInMs: number) => new Promise((resolve) => setTimeout(resolve, waitTimeInMs));
 
-export async function traverseDir(dir: string) {
-	let paths: Map<string, AssetPath> = new Map();
+export async function traverseDir<T extends typeof AssetPathGroup>(dir: string, pathGroup: T) {
+	let paths: Map<string, InstanceType<T>> = new Map();
 	const files = await fs.readdir(dir, { withFileTypes: true });
 	for (let dirent of files) {
 		let file = `${dir}/${dirent.name}`;
 		if (dirent.isDirectory()) {
-			const dirs = await traverseDir(file);
+			const dirs = await traverseDir(file, pathGroup);
 			dirs.forEach((value, key) => {
 				paths.set(key, value);
 			});
 			continue;
 		}
 		try {
-			let path = AssetPath.fromFilepath(file);
+			let path = pathGroup.fromFilepath(file);
 			paths.set(path.noExtFilePath, path);
 		} catch (error) {
 			continue;

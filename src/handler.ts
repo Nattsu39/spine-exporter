@@ -1,9 +1,10 @@
 import fs from "fs/promises";
 import { createCanvas } from "node-canvas-webgl";
 import { exportFuncFactory } from "./exporter.js";
-import { SpineRenderer } from "./renderer.js";
+import { AssetPath, SpineRenderer, loadTexture } from "./renderer.js";
 import { formatOutputPath, traverseDir } from "./utils.js";
 import { TExporterType } from "./exporter.js";
+import { AssetManager, ManagedWebGLRenderingContext } from "@node-spine-runtimes/webgl-3.8.99";
 
 export function parseCanvasSize(size: string) {
 	const canvasWxH = size.split("x");
@@ -45,7 +46,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 	const isOldCanvasMode = typeof canvasSize === "string";
 	const size = isOldCanvasMode ? parseCanvasSize(canvasSize) : { width: 1000, height: 1000 };
 	const renderer = new SpineRenderer(createCanvas(size.width, size.height));
-	const paths = await traverseDir(inputDir);
+	const paths = await traverseDir(inputDir, AssetPath);
 	const pathArray = Array(...paths.values());
 
 	for (let assetIndex = 0; assetIndex < pathArray.length; assetIndex++) {
@@ -83,4 +84,14 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 			console.info(`Asset export error！\nasset: ${assetName}\nerror: ${error}`);
 		}
 	}
+}
+
+export interface TextureUnpackOptions {
+	outputDir: string;
+	preMultipliedAlpha?: boolean;
+};
+
+export async function textureUnpack(inputDir: string, option: TextureUnpackOptions) {
+	const assetManager = new AssetManager(new ManagedWebGLRenderingContext(createCanvas(1000, 1000)))
+	// await loadTexture(assetManager, )
 }
