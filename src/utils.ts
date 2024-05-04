@@ -51,6 +51,7 @@ export interface OutputPathFormatObject extends FormatObject {
 	animationName: string;
 	fps: number;
 	scale: number;
+	assetPath: string
 }
 
 export function formatOutputPath(str: string, obj: OutputPathFormatObject) {

@@ -5,6 +5,7 @@ import { AssetPath, SpineRenderer, loadTexture } from "./renderer.js";
 import { formatOutputPath, traverseDir } from "./utils.js";
 import { TExporterType } from "./exporter.js";
 import { AssetManager, ManagedWebGLRenderingContext } from "@node-spine-runtimes/webgl-3.8.99";
+import path from "path";
 
 export function parseCanvasSize(size: string) {
 	const canvasWxH = size.split("x");
@@ -70,7 +71,7 @@ export async function exportSpineAnimation(inputDir: string, options: ExportSpin
 					endPosition,
 				});
 
-				const formatObject = { assetName, animationName, fps, scale };
+				const formatObject = { assetPath: path.dirname(assetPath.skeleton), assetName, animationName, fps, scale };
 				const exportFunc = exportFuncFactory(exportType, {
 					outputPath: formatOutputPath(outputPath, formatObject),
 					fps,
