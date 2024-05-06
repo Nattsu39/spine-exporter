@@ -6,7 +6,7 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
-		"spine-exporter-cli": "dist/cli.js"
+		"spine-exporter-cli": "dist/cli/index.js"
 	},
 	"files": [
 		"dist/**/*",
