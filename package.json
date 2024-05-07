@@ -18,7 +18,7 @@
 	"scripts": {
 		"prepublishOnly": "npm run clean && npm run build",
 		"clean": "npx rimraf ./dist",
-		"build": "npm run clean && npx tsc -b -clean && npx tsc -b"
+		"build": "npm run clean && npx tsc -b -clean && npx tsc -b && tsc-alias"
 	},
 	"author": "Nattsu39",
 	"license": "MIT",
@@ -45,6 +45,7 @@
 		"@types/node": "^20.12.6",
 		"@types/yargs": "^17.0.32",
 		"prettier": "3.2.5",
+		"tsc-alias": "^1.8.8",
 		"typescript": "^5.3.3"
 	}
 }

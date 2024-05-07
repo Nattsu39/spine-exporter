@@ -1,7 +1,7 @@
 import { CommandModule } from "yargs"
-import { extractKeysToArray } from "../../utils.js";
-import { Exporters } from "../../exporter.js";
-import { SpineAnimationExportOptions, exportSpineAnimation } from "../../handler.js";
+import { extractKeysToArray } from "@/utils.js";
+import { Exporters } from "@/exporter.js";
+import { SpineAnimationExportOptions, exportSpineAnimation } from "@/handler.js";
 import { KebabOptions, CommandOptions } from "../type-hind.js";
 
 export interface CommandArguments extends KebabOptions<SpineAnimationExportOptions> {

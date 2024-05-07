@@ -16,7 +16,12 @@
 		"composite": true,
 		"moduleResolution": "node",
 		"skipLibCheck": true,
-		"strict": true
+		"strict": true,
+		"paths": {
+			"@/*": [
+			  "src/*"
+			]
+		}
 	},
 	"include": ["src/*.ts", "src/cli/**/*.ts"],
 	"exclude": ["dist/**/*.d.ts"]
