@@ -31,7 +31,7 @@ interface FormatObject {
 	[name: string]: string | number;
 }
 
-function format(stringToFormat: string, formatItems: FormatObject): string {
+export function formatString(stringToFormat: string, formatItems: FormatObject): string {
 	let str = stringToFormat;
 
 	Object.entries(formatItems).forEach(([prop, value]) => {
@@ -54,8 +54,9 @@ export interface OutputPathFormatObject extends FormatObject {
 	assetPath: string
 }
 
+
 export function formatOutputPath(str: string, obj: OutputPathFormatObject) {
-	return format(str, obj);
+	return formatString(str, obj);
 }
 
 // 提取对象的键并返回一个包含这些键的数组

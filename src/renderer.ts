@@ -230,6 +230,29 @@ export const AssetPathGroup: AssetPathGroupStatic = class implements AssetPathGr
 	static fromFilepath() { return new this() };
 }
 
+
+export class TexturePath {
+	noExtFilePath: string;
+	assetName: string;
+	
+	atlas: string;
+	texture: string;
+	constructor(atlas: string, texture: string) {
+		this.atlas = replacePathSpecific(atlas);
+		this.texture = replacePathSpecific(texture);
+		this.noExtFilePath = removePathExtension(this.atlas);
+		this.assetName = path.basename(this.noExtFilePath)
+	}
+
+	static fromFilepath(filePath: string): TexturePath {
+		let noExtFilePath: string = removePathExtension(filePath);
+
+		let atlas = noExtFilePath + ".atlas";
+		let texture = noExtFilePath + ".png";
+		return new this(atlas, texture)
+	}
+}
+
 export class AssetPath {
 	noExtFilePath: string;
 	loadMode: "skel" | "json";
