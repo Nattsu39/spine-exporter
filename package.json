@@ -37,6 +37,7 @@
 		"@node-spine-runtimes/webgl-3.8.99": "^0.1.6",
 		"canvas": "2.11.2",
 		"fluent-ffmpeg": "^2.1.2",
+		"p-queue": "^8.0.1",
 		"sharp": "^0.33.3",
 		"yargs": "^17.7.2"
 	},

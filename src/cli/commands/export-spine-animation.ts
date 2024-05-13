@@ -69,6 +69,11 @@ export default <CommandModule<CommandArguments, CommandArguments>>{
 					default: Infinity,
 					desc: "If set, rendering will end at the specified frame.",
 				},
+				"exporter-max-concurrent": {
+					type: "number",
+					default: 2,
+					desc: "Maximum number of concurrencies for export functions"
+				}
 			})
 			.example([
 				["$0 --export-type gif assets/", "Render assets in ./assets/ and export to GIF."],

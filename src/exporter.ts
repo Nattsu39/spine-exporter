@@ -2,16 +2,28 @@ import Path from "@mojojs/path";
 import Ffmpeg from "fluent-ffmpeg";
 import sharp from "sharp";
 import stream from "stream";
+import { defer } from "./utils.js";
+import PQueue from "p-queue";
 
-function createFfmpeg(options?: Ffmpeg.FfmpegCommandOptions): Ffmpeg.FfmpegCommand;
-function createFfmpeg(input?: string | stream.Readable, options?: Ffmpeg.FfmpegCommandOptions): Ffmpeg.FfmpegCommand;
-function createFfmpeg(
+interface FfmpegPromise {
+	ffmpeg: Ffmpeg.FfmpegCommand
+	promise: Promise<void>
+}
+
+function createFfmpegCommand(options?: Ffmpeg.FfmpegCommandOptions): FfmpegPromise;
+function createFfmpegCommand(input?: string | stream.Readable, options?: Ffmpeg.FfmpegCommandOptions): FfmpegPromise;
+function createFfmpegCommand(
 	input?: string | stream.Readable | Ffmpeg.FfmpegCommandOptions,
 	options?: Ffmpeg.FfmpegCommandOptions,
 ) {
-	return Ffmpeg(...arguments).on("error", (err, stdout, stderr) => {
-		console.error("[ffmpeg]: Cannot process video: \n" + stderr);
-	});
+	let { resolve, reject, promise } = defer()
+	const ffmpeg = Ffmpeg(...arguments)
+	ffmpeg
+		.on("end", resolve)
+		.on("error", (err, stdout, stderr) => {
+			reject("[ffmpeg]: Cannot process video: \n" + stderr);
+		});
+	return { ffmpeg, promise }
 }
 
 class CropSize {
@@ -78,7 +90,9 @@ const cropSize = async (animationFrames: Buffer[]) => (await calculateCropSize(a
 
 async function toGIF(animationFrames: Buffer[], fps: number, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from(animationFrames);
-	createFfmpeg(dataStream)
+	const { ffmpeg, promise } = createFfmpegCommand(dataStream)
+
+	ffmpeg
 		.inputFPS(fps)
 		.complexFilter([
 			`${autoCrop 
@@ -90,36 +104,48 @@ async function toGIF(animationFrames: Buffer[], fps: number, autoCrop: boolean, 
 		.outputFPS(fps)
 		.map("[out]")
 		.save(outputPath);
+
+	return promise
 }
 
 async function toMOV(animationFrames: Buffer[], fps: number, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from(animationFrames);
-	const ffmpeg = createFfmpeg(dataStream)
+	const {ffmpeg, promise} = createFfmpegCommand(dataStream);
+
+	ffmpeg
 		.inputFPS(fps)
 		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize(animationFrames))}
 	ffmpeg
 		.outputFPS(fps)
 		.outputOptions("-pix_fmt yuv420p")
 		.save(outputPath);
+
+	return promise
 }
 
 async function toPNGSequence(animationFrames: Buffer[], autoCrop: boolean, outputPath: string) {
 	const indexLength = animationFrames.length.toString().length;
 	const dataStream = stream.Readable.from(animationFrames);
-	const ffmpeg = createFfmpeg(dataStream)
-		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize(animationFrames))}
+
+	const { ffmpeg, promise } = createFfmpegCommand(dataStream)
+	if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize(animationFrames))}
 	ffmpeg
 		.outputFormat("image2")
 		.save(`${outputPath}_%0${indexLength}d.png`);
+
+	return promise
 }
 
 async function toSingleFramePNG(frame: Buffer, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from([frame]);
-	const ffmpeg = createFfmpeg(dataStream)
+
+	const { ffmpeg, promise } = createFfmpegCommand(dataStream)
 		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize([frame]))}
 	ffmpeg
 		.frames(1)
 		.save(outputPath);
+
+	return promise
 }
 
 export const Exporters = {
@@ -130,7 +156,7 @@ export const Exporters = {
 };
 
 export type TExporterType = keyof typeof Exporters;
-export type TExportFunc = (buffer: Buffer[]) => Promise<void>;
+export type TExportFunc = () => Promise<void>;
 
 export interface ExportOptions {
 	outputPath: string;
@@ -138,31 +164,38 @@ export interface ExportOptions {
 	autoCrop?: boolean
 }
 
-export function exportFuncFactory(exportType: TExporterType, options: ExportOptions) {
-	let { fps = 30, autoCrop = false, outputPath } = options;
-
-	type ExporterWrapObject = { [key in TExporterType]: TExportFunc };
-	const obj: ExporterWrapObject = {
-		gif: async (buffers: Buffer[]) => {
-			await Exporters.gif(buffers, fps, autoCrop, outputPath + ".gif");
-		},
-		png: async (buffers: Buffer[]) => {
-			await Exporters.png(buffers[0], autoCrop, outputPath + ".png");
-		},
-		sequence: async (buffers: Buffer[]) => {
-			await Exporters.sequence(buffers, autoCrop, outputPath);
-		},
-		mov: async (buffers: Buffer[]) => {
-			await Exporters.mov(buffers, fps, autoCrop, outputPath + ".mov");
-		},
-	};
-
-	new Path(outputPath).dirname().mkdirSync({ recursive: true });
-
-	const func = obj[exportType];
-	if (func) {
-		return func;
+export class FfmpegFrameExporter {
+	queue: PQueue
+	
+	constructor(concurrency: number) {
+		this.queue = new PQueue({ concurrency });
 	}
+	
+	run (animationFrames: Buffer[], exportType: TExporterType, options: ExportOptions) {
+		let { fps = 30, autoCrop = false, outputPath } = options;
 
-	throw new Error("导出类型不存在！");
+		const obj: { [key in TExporterType]: TExportFunc } = {
+			gif: () => {
+				return Exporters.gif(animationFrames, fps, autoCrop, outputPath + ".gif");
+			},
+			png: () => {
+				return Exporters.png(animationFrames[0], autoCrop, outputPath + ".png");
+			},
+			sequence: () => {
+				return Exporters.sequence(animationFrames, autoCrop, outputPath);
+			},
+			mov: () => {
+				return Exporters.mov(animationFrames, fps, autoCrop, outputPath + ".mov");
+			},
+		};
+	
+		new Path(outputPath).dirname().mkdirSync({ recursive: true });
+	
+		const func = obj[exportType];
+		if (!func) {
+			throw new Error("导出类型不存在！");
+		}
+		
+		this.queue.add(func).catch((reason) => console.log(reason))
+	}
 }

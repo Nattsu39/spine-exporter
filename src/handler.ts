@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { createCanvas } from "node-canvas-webgl";
-import { exportFuncFactory } from "./exporter.js";
+import { FfmpegFrameExporter } from "./exporter.js";
 import { AssetPath, SpineRenderer, TexturePath, loadTexture } from "./renderer.js";
 import { formatOutputPath, traverseDir } from "./utils.js";
 import { TExporterType } from "./exporter.js";
@@ -20,6 +20,7 @@ export function parseCanvasSize(size: string) {
 export interface SpineAnimationExportOptions {
 	outputPath?: string;
 	exportType: TExporterType;
+	exporterMaxConcurrent?: number;
 	canvasSize?: string | null;
 	selectedAnimation?: string[];
 	preMultipliedAlpha: boolean;
@@ -32,6 +33,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 	let {
 		outputPath = "output/{assetName}/{animationName}",
 		exportType,
+		exporterMaxConcurrent = 2,
 		canvasSize,
 		selectedAnimation = [],
 		preMultipliedAlpha = false,
@@ -48,10 +50,12 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 
 	const isOldCanvasMode = typeof canvasSize === "string";
 	const size = isOldCanvasMode ? parseCanvasSize(canvasSize) : { width: 1000, height: 1000 };
+
 	const renderer = new SpineRenderer(createCanvas(size.width, size.height));
+	const exporter = new FfmpegFrameExporter(exporterMaxConcurrent)
+
 	const paths = await traverseDir(inputDir, AssetPath);
 	const pathArray = Array(...paths.values());
-
 	for (let assetIndex = 0; assetIndex < pathArray.length; assetIndex++) {
 		const assetPath = pathArray[assetIndex];
 		const assetName = assetPath.assetName;
@@ -74,14 +78,16 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 				});
 
 				const formatObject = { assetPath: path.dirname(assetPath.skeleton), assetName, animationName, fps, scale };
-				const exportFunc = exportFuncFactory(exportType, {
-					outputPath: formatOutputPath(outputPath, formatObject),
-					fps,
-					autoCrop: isOldCanvasMode,
-				});
-
-				console.log(`${assetProcess}Start exporting the animation '${animationName}' of asset '${assetName}'...`);
-				await exportFunc(animationFrames);
+				console.log(`${assetProcess}Add animation '${animationName}' of asset '${assetName}' to export queue`);
+				exporter.run(
+					animationFrames,
+					exportType,
+					{
+						outputPath: formatOutputPath(outputPath, formatObject),
+						fps,
+						autoCrop: isOldCanvasMode,
+					}
+				);
 			}
 		} catch (error) {
 			console.info(`Asset export error！\nasset: ${assetName}\nerror: ${error}`);
