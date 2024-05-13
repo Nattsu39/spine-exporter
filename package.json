@@ -1,6 +1,6 @@
 {
 	"name": "spine-exporter",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "A spine animation exporter that does not depend on spine editing software.",
 	"type": "module",
 	"main": "dist/index.js",
