@@ -69,7 +69,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 				}
 
 				console.log(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
-				const animationFrames = await renderer.render({
+				const animationFrames = renderer.render({
 					skeleton,
 					state,
 					animationName,

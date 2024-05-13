@@ -23,7 +23,6 @@ import {
 } from "@node-spine-runtimes/webgl-3.8.99";
 import fs from "fs";
 import path from "path";
-import { Queue } from "./queue.js";
 import { sleep, replacePathSpecific, removePathExtension } from "./utils.js";
 
 export interface LoadedResult {
@@ -121,8 +120,6 @@ export class SpineRenderer {
 	readonly assetManager: AssetManager;
 	/** The scene renderer for easy drawing of skeletons, shapes, and images. */
 	private readonly renderer: SceneRenderer;
-	private readonly renderQueue: Queue = new Queue(this);
-	isRendering: boolean = false;
 
 	constructor(canvas: NodeCanvasElement, config?: NodeCanvasRenderingContext2DSettings) {
 		this.context = new ManagedWebGLRenderingContext(canvas, config);
@@ -154,7 +151,7 @@ export class SpineRenderer {
 		return { skeleton: skeleton, state: animationState };
 	}
 
-	async render(options: RenderOptions) {
+	render(options: RenderOptions) {
 		const time = new TimeKeeper();
 
 		const update = (delta: number) => {
@@ -178,35 +175,28 @@ export class SpineRenderer {
 
 		state.setAnimation(0, animationName, false);
 
-		let isComplete: boolean = false;
-		const renderingEnd = () => {
-			(isComplete = true), (this.isRendering = false);
-		};
-		state.addListener({
-			complete: renderingEnd,
-		});
-
 		const viewport = calculateAnimationViewport(skeleton.data.findAnimation(animationName)!, skeleton, fps);
 		this.canvas.width = Math.round(viewport.width);
 		this.canvas.height = Math.round(viewport.height);
 		if (this.canvas.width % 2 !== 0) this.canvas.width += 1;
 		if (this.canvas.height % 2 !== 0) this.canvas.height += 1;
+		
+		let isComplete: boolean = false;
+		const renderingEnd = () => { isComplete = true };
 
-		const promise = async () => {
-			this.isRendering = true;
+		state.addListener({
+			complete: renderingEnd,
+		});
 
-			const buffers: Buffer[] = [];
-			while (!isComplete && time.frameCount !== endPosition) {
-				update(1 / fps);
-				render();
-				const frame = this.canvas.toBuffer("image/png", { compressionLevel: 1 });
-				buffers.push(frame);
-			}
-			renderingEnd();
-			return buffers;
-		};
-
-		return await this.renderQueue.enqueue(promise);
+		const buffers: Buffer[] = [];
+		while (!isComplete && time.frameCount !== endPosition) {
+			update(1 / fps);
+			render();
+			const frame = this.canvas.toBuffer("image/png", { compressionLevel: 1 });
+			buffers.push(frame);
+		}
+		renderingEnd();
+		return buffers;
 	}
 }
 
