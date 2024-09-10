@@ -23,7 +23,7 @@ import {
 } from "@node-spine-runtimes/webgl-3.8.99";
 import fs from "fs";
 import path from "path";
-import { sleep, replacePathSpecific, removePathExtension } from "./utils.js";
+import { sleep, replacePathSpecific, removePathExtension, Viewsize } from "./utils.js";
 
 export interface LoadedResult {
 	skeleton: Skeleton;
@@ -33,6 +33,7 @@ export interface LoadedResult {
 export interface RenderOptions extends LoadedResult {
 	animationName?: string;
 	fps: number;
+	viewsize?: Viewsize;
 	endPosition?: number;
 }
 
@@ -171,13 +172,20 @@ export class SpineRenderer {
 			this.renderer.drawSkeleton(skeleton, true);
 			this.renderer.end();
 		};
-		let { skeleton, state, animationName = skeleton.data.animations[0].name, fps, endPosition = Infinity } = options;
+		let { skeleton, state, animationName = skeleton.data.animations[0].name, fps, viewsize, endPosition = Infinity } = options;
 
 		state.setAnimation(0, animationName, false);
 
 		const viewport = calculateAnimationViewport(skeleton.data.findAnimation(animationName)!, skeleton, fps);
-		this.canvas.width = Math.round(viewport.width);
-		this.canvas.height = Math.round(viewport.height);
+		if (viewsize === undefined) {
+			this.canvas.width = Math.round(viewport.width);
+			this.canvas.height = Math.round(viewport.height);
+		}
+		else {
+			this.canvas.width = viewsize.width;
+			this.canvas.height = viewsize.height;
+		}
+
 		if (this.canvas.width % 2 !== 0) this.canvas.width += 1;
 		if (this.canvas.height % 2 !== 0) this.canvas.height += 1;
 		

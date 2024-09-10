@@ -89,3 +89,8 @@ export function defer<T = void>(): Deferred<T> {
     })
     return { resolve, reject, promise };
 }
+
+export interface Viewsize {
+	width: number;
+	height: number;
+}

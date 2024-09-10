@@ -2,19 +2,19 @@ import fs from "fs/promises";
 import { createCanvas } from "node-canvas-webgl";
 import { FfmpegFrameExporter } from "./exporter.js";
 import { AssetPath, SpineRenderer, TexturePath, loadTexture } from "./renderer.js";
-import { formatOutputPath, traverseDir } from "./utils.js";
+import { formatOutputPath, traverseDir, Viewsize } from "./utils.js";
 import { TExporterType } from "./exporter.js";
 import { AssetManager, ManagedWebGLRenderingContext } from "@node-spine-runtimes/webgl-3.8.99";
 import sharp from "sharp";
 import path from "path";
 import { formatString } from "./utils.js";
 
-export function parseCanvasSize(size: string) {
-	const canvasWxH = size.split("x");
-	if (canvasWxH.length !== 2) {
+export function parseCanvasSize(size: string): Viewsize {
+	const canvasSize = size.split("x");
+	if (canvasSize.length !== 2) {
 		throw new Error("Canvas size format error! \n" + "Correct format: [width]x[height], for example 500x500.");
 	}
-	return { width: parseInt(canvasWxH[0]), height: parseInt(canvasWxH[1]) };
+	return { width: parseInt(canvasSize[0]), height: parseInt(canvasSize[1]) };
 }
 
 export interface SpineAnimationExportOptions {
@@ -48,10 +48,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 	};
 	await checkParams();
 
-	const isOldCanvasMode = typeof canvasSize === "string";
-	const size = isOldCanvasMode ? parseCanvasSize(canvasSize) : { width: 1000, height: 1000 };
-
-	const renderer = new SpineRenderer(createCanvas(size.width, size.height));
+	const renderer = new SpineRenderer(createCanvas(1000, 1000));
 	const exporter = new FfmpegFrameExporter(exporterMaxConcurrent)
 
 	const paths = await traverseDir(inputDir, AssetPath);
@@ -67,12 +64,13 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 				if (selectedAnimation.length && !selectedAnimation.includes(animationName)) {
 					continue;
 				}
-
+				const viewsize = typeof canvasSize === "string" ? parseCanvasSize(canvasSize) : undefined;
 				console.log(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
 				const animationFrames = renderer.render({
 					skeleton,
 					state,
 					animationName,
+					viewsize,
 					fps,
 					endPosition,
 				});
@@ -85,7 +83,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 					{
 						outputPath: formatOutputPath(outputPath, formatObject),
 						fps,
-						autoCrop: isOldCanvasMode,
+						autoCrop: viewsize !== undefined,
 					}
 				);
 			}
