@@ -23,7 +23,7 @@ import {
 } from "@node-spine-runtimes/webgl-3.8.99";
 import fs from "fs";
 import path from "path";
-import { sleep, replacePathSpecific, removePathExtension, Viewsize } from "./utils.js";
+import { sleep, replacePathSpecific, removePathExtension, ViewSize, Viewport, ViewPosition } from "./utils.js";
 
 export interface LoadedResult {
 	skeleton: Skeleton;
@@ -33,7 +33,8 @@ export interface LoadedResult {
 export interface RenderOptions extends LoadedResult {
 	animationName?: string;
 	fps: number;
-	viewsize?: Viewsize;
+	viewSize?: ViewSize;
+	viewPosition?: ViewPosition;
 	endPosition?: number;
 }
 
@@ -62,13 +63,6 @@ export class TimeKeeper {
 			this.frameCount = 0;
 		}
 	}
-}
-
-export interface Viewport {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
 }
 
 function calculateAnimationViewport(animation: Animation, skeleton: Skeleton, fps: number): Viewport {
@@ -164,34 +158,28 @@ export class SpineRenderer {
 		};
 
 		const render = () => {
-			this.renderer.camera.position.x = viewport.x + viewport.width / 2;
-			this.renderer.camera.position.y = viewport.y + viewport.height / 2;
+			this.renderer.camera.position.x = x_position;
+			this.renderer.camera.position.y = y_position;
 			this.gl.clearColor(0, 0, 0, 0);
 			this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 			this.renderer.begin();
 			this.renderer.drawSkeleton(skeleton, true);
 			this.renderer.end();
 		};
-		let { skeleton, state, animationName = skeleton.data.animations[0].name, fps, viewsize, endPosition = Infinity } = options;
+		let { skeleton, state, animationName = skeleton.data.animations[0].name, fps, viewSize: viewsize, viewPosition, endPosition = Infinity } = options;
 
 		state.setAnimation(0, animationName, false);
 
 		const viewport = calculateAnimationViewport(skeleton.data.findAnimation(animationName)!, skeleton, fps);
-		if (viewsize === undefined) {
-			this.canvas.width = Math.round(viewport.width);
-			this.canvas.height = Math.round(viewport.height);
-		}
-		else {
-			this.canvas.width = viewsize.width;
-			this.canvas.height = viewsize.height;
-		}
-
+		this.canvas.width = viewsize?.width || Math.round(viewport.width);
+		this.canvas.height = viewsize?.height || Math.round(viewport.width)
 		if (this.canvas.width % 2 !== 0) this.canvas.width += 1;
 		if (this.canvas.height % 2 !== 0) this.canvas.height += 1;
-		
+		const x_position = viewPosition?.x || viewport.x + viewport.width / 2
+		const y_position = viewPosition?.y || viewport.y + viewport.height / 2
+
 		let isComplete: boolean = false;
 		const renderingEnd = () => { isComplete = true };
-
 		state.addListener({
 			complete: renderingEnd,
 		});

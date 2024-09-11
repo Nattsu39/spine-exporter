@@ -2,26 +2,19 @@ import fs from "fs/promises";
 import { createCanvas } from "node-canvas-webgl";
 import { FfmpegFrameExporter } from "./exporter.js";
 import { AssetPath, SpineRenderer, TexturePath, loadTexture } from "./renderer.js";
-import { formatOutputPath, traverseDir, Viewsize } from "./utils.js";
+import { formatOutputPath, traverseDir, ViewPosition, ViewSize } from "./utils.js";
 import { TExporterType } from "./exporter.js";
-import { AssetManager, ManagedWebGLRenderingContext } from "@node-spine-runtimes/webgl-3.8.99";
+import { AssetManager, ManagedWebGLRenderingContext, Vector2 } from "@node-spine-runtimes/webgl-3.8.99";
 import sharp from "sharp";
 import path from "path";
 import { formatString } from "./utils.js";
-
-export function parseCanvasSize(size: string): Viewsize {
-	const canvasSize = size.split("x");
-	if (canvasSize.length !== 2) {
-		throw new Error("Canvas size format error! \n" + "Correct format: [width]x[height], for example 500x500.");
-	}
-	return { width: parseInt(canvasSize[0]), height: parseInt(canvasSize[1]) };
-}
 
 export interface SpineAnimationExportOptions {
 	outputPath?: string;
 	exportType: TExporterType;
 	exporterMaxConcurrent?: number;
-	canvasSize?: string | null;
+	canvasSize?: ViewSize;
+	viewPosition?: ViewPosition,
 	selectedAnimation?: string[];
 	preMultipliedAlpha: boolean;
 	scale?: number;
@@ -35,6 +28,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 		exportType,
 		exporterMaxConcurrent = 2,
 		canvasSize,
+		viewPosition,
 		selectedAnimation = [],
 		preMultipliedAlpha = false,
 		fps = 30,
@@ -64,13 +58,14 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 				if (selectedAnimation.length && !selectedAnimation.includes(animationName)) {
 					continue;
 				}
-				const viewsize = typeof canvasSize === "string" ? parseCanvasSize(canvasSize) : undefined;
+				const viewSize = canvasSize;
 				console.log(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
 				const animationFrames = renderer.render({
 					skeleton,
 					state,
 					animationName,
-					viewsize,
+					viewSize,
+					viewPosition,
 					fps,
 					endPosition,
 				});
@@ -83,7 +78,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 					{
 						outputPath: formatOutputPath(outputPath, formatObject),
 						fps,
-						autoCrop: viewsize !== undefined,
+						autoCrop: viewSize !== undefined,
 					}
 				);
 			}

@@ -1,5 +1,5 @@
 import { CommandModule } from "yargs"
-import { extractKeysToArray } from "@/utils.js";
+import { extractKeysToArray, parseVector2 as parseVector2Arg } from "@/utils.js";
 import { Exporters } from "@/exporter.js";
 import { SpineAnimationExportOptions, exportSpineAnimation } from "@/handler.js";
 import { KebabOptions, CommandOptions } from "../type-hind.js";
@@ -38,7 +38,22 @@ export default <CommandModule<CommandArguments, CommandArguments>>{
 					alias: "c",
 					type: "string",
 					default: null,
+					coerce: (arg) => {
+						if (typeof arg !== 'string') return
+						const vector2 = parseVector2Arg(arg)
+						return { width: vector2.x, height: vector2.y }
+					},
 					desc: "If set, old-style cropping is used, i.e. content that exceeds the canvas size will not be rendered. By default, AABB's min-max vertex positioning rendering range is used.",
+				},
+				"view-position": {
+					type: "string",
+					default: null,
+					coerce(arg) {
+						if (typeof arg !== 'string') return
+						const vector2 = parseVector2Arg(arg)
+						return { x: vector2.x, y: vector2.y }
+					},
+					desc: "Set the viewpoint manually. Useful when setting a smaller canvas size."
 				},
 				"selected-animation": {
 					alias: "s",
@@ -73,7 +88,7 @@ export default <CommandModule<CommandArguments, CommandArguments>>{
 					type: "number",
 					default: 2,
 					desc: "Maximum number of concurrencies for export functions"
-				}
+				},
 			})
 			.example([
 				["$0 --export-type gif assets/", "Render assets in ./assets/ and export to GIF."],

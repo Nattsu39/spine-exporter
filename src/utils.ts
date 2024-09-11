@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import { AssetPathGroup } from "./renderer.js";
 import path from "path";
+import { Vector2 } from "@node-spine-runtimes/webgl-3.8.99";
 
 export const sleep = (waitTimeInMs: number) => new Promise((resolve) => setTimeout(resolve, waitTimeInMs));
 
@@ -90,7 +91,24 @@ export function defer<T = void>(): Deferred<T> {
     return { resolve, reject, promise };
 }
 
-export interface Viewsize {
+export interface ViewSize {
 	width: number;
 	height: number;
+}
+
+export interface ViewPosition {
+	x: number;
+	y: number;
+}
+
+export type Viewport = ViewSize & ViewPosition
+
+export function parseVector2(arg: string): Vector2 {
+	arg = arg.replaceAll(`'`, '')
+	arg = arg.replaceAll(`"`, '')
+	const twoArgs = arg.split("x");
+	if (twoArgs.length !== 2) {
+		throw new Error("Arg format error! \n" + "Correct format: [arg1]x[arg2]");
+	}
+	return new Vector2(parseInt(twoArgs[0]), parseInt(twoArgs[1]))
 }
