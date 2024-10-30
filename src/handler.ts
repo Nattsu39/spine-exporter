@@ -4,7 +4,7 @@ import { FfmpegFrameExporter } from "./exporter.js";
 import { AssetPath, SpineRenderer, TexturePath, loadTexture } from "./renderer.js";
 import { formatOutputPath, traverseDir, ViewPosition, ViewSize } from "./utils.js";
 import { TExporterType } from "./exporter.js";
-import { AssetManager, ManagedWebGLRenderingContext, Vector2 } from "@node-spine-runtimes/webgl-3.8.99";
+import { AssetManager, ManagedWebGLRenderingContext } from "@node-spine-runtimes/webgl-3.8.99";
 import sharp from "sharp";
 import path from "path";
 import { formatString } from "./utils.js";
@@ -134,7 +134,7 @@ export async function textureUnpack(inputDir: string, options: TextureUnpackOpti
 			}
 			if (rotate) result.rotate(90)
 			
-			outputDir = formatString(outputDir, {assetPath: path.dirname(texturePath.texture)})
+			outputDir = formatString(outputDir, {assetPath: path.dirname(texturePath.atlas)})
 			await fs.mkdir(outputDir, { recursive: true })
 			await result.toFile(`${outputDir}${name}.png`)
 		}

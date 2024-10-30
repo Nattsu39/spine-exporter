@@ -134,7 +134,7 @@ export class SpineRenderer {
 		while (!this.assetManager.isLoadingComplete()) {
 			await sleep(100);
 		}
-
+		
 		let atlasLoader = new AtlasAttachmentLoader(atlas);
 		const skeletonBinaryOrJson: SkeletonBinary | SkeletonJson =
 			assetPath.loadMode === "skel" ? new SkeletonBinary(atlasLoader) : new SkeletonJson(atlasLoader);
@@ -246,18 +246,15 @@ export class AssetPath {
 
 	skeleton: string;
 	atlas: string;
-	texture: string;
-	constructor(skeleton: string, atlas: string, texture: string) {
+	constructor(skeleton: string, atlas: string) {
 		this.skeleton = replacePathSpecific(skeleton);
 		this.atlas = replacePathSpecific(atlas);
-		this.texture = replacePathSpecific(texture);
 		this.noExtFilePath = removePathExtension(this.skeleton);
 		this.loadMode = this.skeleton.slice(-4) as "skel" | "json";
 
 		if (this.loadMode !== "json" && this.loadMode !== "skel") throw new TypeError("骨骼数据后缀不正确");
 		if (!fs.existsSync(this.skeleton)) throw new Error(`找不到骨骼数据文件${this.skeleton}！`);
 		if (!fs.existsSync(this.atlas)) throw new Error(`找不到纹理图集${this.atlas}！`);
-		if (!fs.existsSync(this.texture)) throw new Error(`找不到纹理${this.texture}！`);
 
 		this.assetName = path.basename(this.noExtFilePath);
 	}
@@ -274,8 +271,7 @@ export class AssetPath {
 			throw new Error("找不到骨骼文件！");
 		}
 		let atlas = noExtFilePath + ".atlas";
-		let texture = noExtFilePath + ".png";
 
-		return new this(skeleton, atlas, texture);
+		return new this(skeleton, atlas);
 	}
 }
