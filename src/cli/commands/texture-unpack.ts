@@ -15,7 +15,7 @@ export default <CommandModule<CommandArguments, CommandArguments>>{
 				"inputDir": {
 					demandOption: true,
 					type: "string",
-					desc: "Texture will be imported from this directory and its subdirectories. The atlas with the same name as the Texture must be contained in the same directory as the Texture.",
+					desc: "Textures will be imported from this directory and its subdirectories. Textures need to be in the same directory as the atlas.",
 				},
 				"output-dir": {
 					alias: "o",

@@ -19,7 +19,7 @@ export default <CommandModule<CommandArguments, CommandArguments>>{
 				"inputDir": {
 					demandOption: true,
 					type: "string",
-					desc: "Assets will be imported from this directory and its subdirectories, and .png/.atlas with the same name as .skel must be included in the same directory as .skel.",
+					desc: "Assets will be imported from this directory and its subdirectories, and .atlas with the same name as .skel must be included in the same directory as .skel.",
 				},
 				"output-path": {
 					alias: "o",
