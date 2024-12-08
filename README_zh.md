@@ -4,23 +4,28 @@
 
 [spine](https://zh.esotericsoftware.com/)动画导出器。
 
-## 支持的Spine版本
-| Spine版本 |   状态   |          注释           |
+## 支持的 Spine 版本
+| Spine 版本 |   状态   |          注释           |
 | :-------: | :------: | :---------------------: |
-|   3.7.x   | 计划支持 |   优先级排在4.0.x之后   |
-|   3.8.x   |  支持中  | 仅测试3.8.95/3.8.99版本 |
-|   4.0.x   | 计划支持 |    计划在1.0版本支持    |
+|   3.7.x   | 计划支持 |   优先级排在 4.0.x 之后   |
+|   3.8.x   |  支持中  | 仅测试 3.8.95/3.8.99 版本 |
+|   4.0.x   | 计划支持 |    计划在 1.0 版本支持    |
 
 ## 特色功能
-- **不依赖spine编辑器软件**
+- **不依赖 spine 编辑器软件**
 - 完全命令行界面
 - 可批量导出
 - 支持`.skel`/`.json`骨架导入
-- 可将动画导出为GIF/MOV/PNG序列/单帧PNG
+- 可将动画导出为 GIF/MOV/PNG 序列/单帧 PNG
 - 纹理解包功能
 
 ## 安装
-安装[Node.js](https://nodejs.org/zh)（版本需求^18.17.0 或 >= 20.3.0），然后：
+建议使用[Volta](https://volta.sh/)，安装 Volta，然后：
+```shell
+$ npm i -g spine-exporter
+$ spine-export-cli --help
+```
+或者手动安装 Node，安装[Node.js](https://nodejs.org/zh)（版本需求~18.17 或 ~20.3），然后：
 ```shell
 $ npm i spine-exporter
 $ spine-export-cli --help

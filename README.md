@@ -19,11 +19,19 @@
 - Texture unpacking feature
 
 ## Installation
-Install [Node.js](https://nodejs.org/zh) (version requirement ^18.17.0 or >= 20.3.0), then:
+Recommend using [Volta](https://volta.sh/).
+
+Install Volta, then:
+```shell
+$ npm i -g spine-exporter
+$ spine-export-cli --help
+```
+Or install manually, install [Node.js](https://nodejs.org/zh) (version requirement ~18.17 or ~20.3), then:
 ```shell
 $ npm i spine-exporter
 $ spine-export-cli --help
 ```
+
 
 ## Example
 ```
