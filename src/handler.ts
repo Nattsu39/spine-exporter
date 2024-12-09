@@ -81,6 +81,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 						autoCrop: viewSize !== undefined,
 					}
 				);
+				await exporter.queue.onEmpty()
 			}
 		} catch (error) {
 			console.info(`Asset export error！\nasset: ${assetName}\nerror: ${error}`);
