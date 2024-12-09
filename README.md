@@ -23,10 +23,11 @@ Recommend using [Volta](https://volta.sh/).
 
 Install Volta, then:
 ```shell
+$ volta install node@18.19
 $ npm i -g spine-exporter
 $ spine-export-cli --help
 ```
-Or install manually, install [Node.js](https://nodejs.org/zh) (version requirement ~18.17 or ~20.3), then:
+Or install manually, install [Node.js](https://nodejs.org/zh) (version requirement ~18.19 or ~20.3), then:
 ```shell
 $ npm i spine-exporter
 $ spine-export-cli --help

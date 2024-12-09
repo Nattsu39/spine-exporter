@@ -22,10 +22,11 @@
 ## 安装
 建议使用[Volta](https://volta.sh/)，安装 Volta，然后：
 ```shell
+$ volta install node@18.19
 $ npm i -g spine-exporter
 $ spine-export-cli --help
 ```
-或者手动安装 Node，安装[Node.js](https://nodejs.org/zh)（版本需求~18.17 或 ~20.3），然后：
+或者手动安装 Node，安装[Node.js](https://nodejs.org/zh)（版本需求~18.19 或 ~20.3），然后：
 ```shell
 $ npm i spine-exporter
 $ spine-export-cli --help
