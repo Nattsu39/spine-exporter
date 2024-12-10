@@ -8,6 +8,7 @@ import { AssetManager, ManagedWebGLRenderingContext } from "@node-spine-runtimes
 import sharp from "sharp";
 import path from "path";
 import { formatString } from "./utils.js";
+import { logger } from "./logger.js";
 
 export interface SpineAnimationExportOptions {
 	outputPath?: string;
@@ -59,7 +60,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 					continue;
 				}
 				const viewSize = canvasSize;
-				console.log(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
+				logger.info(`${assetProcess}Start rendering the animation '${animationName}' of asset '${assetName}'...`);
 				const animationFrames = renderer.render({
 					skeleton,
 					state,
@@ -71,7 +72,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 				});
 
 				const formatObject = { assetPath: path.dirname(assetPath.skeleton), assetName, animationName, fps, scale };
-				console.log(`${assetProcess}Add animation '${animationName}' of asset '${assetName}' to export queue`);
+				logger.info(`${assetProcess}Add animation '${animationName}' of asset '${assetName}' to export queue`);
 				exporter.run(
 					animationFrames,
 					exportType,
@@ -84,7 +85,7 @@ export async function exportSpineAnimation(inputDir: string, options: SpineAnima
 				await exporter.queue.onEmpty()
 			}
 		} catch (error) {
-			console.info(`Asset export error！\nasset: ${assetName}\nerror: ${error}`);
+			logger.error(`Asset export error！\nasset: ${assetName}\nerror: ${error}`);
 		}
 	}
 }
@@ -114,18 +115,18 @@ export async function textureUnpack(inputDir: string, options: TextureUnpackOpti
 				height: rotate ? originalWidth : originalHeight
 			})
 
-			// 反预乘alpha
+			// 反预乘 alpha
 			if (!preMultipliedAlpha) {
 				let { data, info } = await textureImage.raw().toBuffer({ resolveWithObject: true })
 
-				const channels = info.channels; // 图像通道数（一般为3或4，分别代表RGB和RGBA）
+				const channels = info.channels; // 图像通道数（一般为 3 或 4，分别代表 RGB 和 RGBA）
 				// 一次迭代一个像素
 				for (let i = 0; i < data.length; i += channels) {
 					const alpha = data[i + channels - 1] / 255; // 提取alpha通道值并将其归一化到[0, 1]
 					if (alpha === 0) {
 						continue
 					}
-					// 迭代像素的R, G, B值
+					// 迭代像素的 R, G, B 值
 					for (let c = 0; c < channels - 1; c++) {
 						data[i + c] = Math.floor(Math.min(data[i + c] / alpha, 255)) // 反预乘
 					}

@@ -39,6 +39,7 @@
 		"fluent-ffmpeg": "^2.1.2",
 		"p-queue": "^8.0.1",
 		"sharp": "^0.33.3",
+		"winston": "^3.17.0",
 		"yargs": "^17.7.2"
 	},
 	"devDependencies": {

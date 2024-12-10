@@ -4,24 +4,28 @@ import sharp from "sharp";
 import stream from "stream";
 import { defer } from "./utils.js";
 import PQueue from "p-queue";
+import { logger } from "./logger.js";
 
 interface FfmpegPromise {
 	ffmpeg: Ffmpeg.FfmpegCommand
 	promise: Promise<void>
 }
 
-function createFfmpegCommand(options?: Ffmpeg.FfmpegCommandOptions): FfmpegPromise;
-function createFfmpegCommand(input?: string | stream.Readable, options?: Ffmpeg.FfmpegCommandOptions): FfmpegPromise;
 function createFfmpegCommand(
-	input?: string | stream.Readable | Ffmpeg.FfmpegCommandOptions,
+	input: stream.Readable,
+	outputPath?: string,
 	options?: Ffmpeg.FfmpegCommandOptions,
-) {
-	let { resolve, reject, promise } = defer()
-	const ffmpeg = Ffmpeg(...arguments)
+): FfmpegPromise {
+	const { resolve, reject, promise } = defer()
+	const ffmpeg = Ffmpeg(input, { logger, ...options })
 	ffmpeg
+		.on('start', () => {
+			logger.info(`[ffmpeg]: Start exporting, output path: ${outputPath}`);
+		})
 		.on("end", resolve)
+		.on("end", () => logger.info(`[ffmpeg]: Export finished, output path: ${outputPath}`))
 		.on("error", (err, stdout, stderr) => {
-			reject("[ffmpeg]: Cannot process video: \n" + stderr);
+			reject("[ffmpeg]: Export failed: \n" + stderr);
 		});
 	return { ffmpeg, promise }
 }
@@ -90,8 +94,7 @@ const cropSize = async (animationFrames: Buffer[]) => (await calculateCropSize(a
 
 async function toGIF(animationFrames: Buffer[], fps: number, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from(animationFrames);
-	const { ffmpeg, promise } = createFfmpegCommand(dataStream)
-
+	const { ffmpeg, promise } = createFfmpegCommand(dataStream, outputPath)
 	ffmpeg
 		.inputFPS(fps)
 		.complexFilter([
@@ -110,7 +113,7 @@ async function toGIF(animationFrames: Buffer[], fps: number, autoCrop: boolean, 
 
 async function toMOV(animationFrames: Buffer[], fps: number, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from(animationFrames);
-	const {ffmpeg, promise} = createFfmpegCommand(dataStream);
+	const {ffmpeg, promise} = createFfmpegCommand(dataStream, outputPath);
 
 	ffmpeg
 		.inputFPS(fps)
@@ -127,7 +130,7 @@ async function toPNGSequence(animationFrames: Buffer[], autoCrop: boolean, outpu
 	const indexLength = animationFrames.length.toString().length;
 	const dataStream = stream.Readable.from(animationFrames);
 
-	const { ffmpeg, promise } = createFfmpegCommand(dataStream)
+	const { ffmpeg, promise } = createFfmpegCommand(dataStream, outputPath)
 	if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize(animationFrames))}
 	ffmpeg
 		.outputFormat("image2")
@@ -139,7 +142,7 @@ async function toPNGSequence(animationFrames: Buffer[], autoCrop: boolean, outpu
 async function toSingleFramePNG(frame: Buffer, autoCrop: boolean, outputPath: string) {
 	const dataStream = stream.Readable.from([frame]);
 
-	const { ffmpeg, promise } = createFfmpegCommand(dataStream)
+	const { ffmpeg, promise } = createFfmpegCommand(dataStream, outputPath)
 		if (autoCrop) {ffmpeg.complexFilter("crop=" + await cropSize([frame]))}
 	ffmpeg
 		.frames(1)
@@ -196,6 +199,6 @@ export class FfmpegFrameExporter {
 			throw new Error("导出类型不存在！");
 		}
 		
-		this.queue.add(func).catch((reason) => console.log(reason))
+		this.queue.add(func).catch((reason) => logger.error(reason))
 	}
 }
